@@ -53,7 +53,7 @@ Macros are treated as a distinct category. A `macro_rules!` body that happens to
 ### Steps
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/dave-gray101/code-rust-fold
 cd code-rust-fold
 npm install
 npm run compile

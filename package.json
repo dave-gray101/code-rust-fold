@@ -9,9 +9,10 @@
   },
   "categories": ["Other"],
   "keywords": ["rust", "fold", "folding", "rust-analyzer"],
+  "license": "MIT",
   "repository": {
     "type": "git",
-    "url": ""
+    "url": "https://github.com/dave-gray101/code-rust-fold"
   },
   "activationEvents": [
     "onLanguage:rust",
@@ -111,7 +112,7 @@
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "lint": "eslint src --ext ts",
-    "package": "vsce package --allow-missing-repository --skip-license"
+    "package": "vsce package"
   },
   "devDependencies": {
     "@types/vscode": "^1.85.0",
