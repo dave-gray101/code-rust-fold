@@ -1,0 +1,122 @@
+{
+  "name": "code-rust-fold",
+  "displayName": "Rust Fold",
+  "description": "Enhanced fold/unfold shortcuts for Rust files via rust-analyzer LSP",
+  "version": "0.1.0",
+  "publisher": "code-rust-fold",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": ["Other"],
+  "keywords": ["rust", "fold", "folding", "rust-analyzer"],
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "activationEvents": [
+    "onLanguage:rust",
+    "workspaceContains:**/*.rs"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      { "command": "rustFold.toggleComments",    "title": "Rust: Toggle Fold Comments" },
+      { "command": "rustFold.foldComments",      "title": "Rust: Fold Comments" },
+      { "command": "rustFold.unfoldComments",    "title": "Rust: Unfold Comments" },
+
+      { "command": "rustFold.toggleDocComments", "title": "Rust: Toggle Fold Doc Comments" },
+      { "command": "rustFold.foldDocComments",   "title": "Rust: Fold Doc Comments" },
+      { "command": "rustFold.unfoldDocComments", "title": "Rust: Unfold Doc Comments" },
+
+      { "command": "rustFold.toggleFunctions",   "title": "Rust: Toggle Fold Functions" },
+      { "command": "rustFold.foldFunctions",     "title": "Rust: Fold Functions" },
+      { "command": "rustFold.unfoldFunctions",   "title": "Rust: Unfold Functions" },
+
+      { "command": "rustFold.toggleImpls",       "title": "Rust: Toggle Fold Impls" },
+      { "command": "rustFold.foldImpls",         "title": "Rust: Fold Impls" },
+      { "command": "rustFold.unfoldImpls",       "title": "Rust: Unfold Impls" },
+
+      { "command": "rustFold.toggleStructs",     "title": "Rust: Toggle Fold Structs" },
+      { "command": "rustFold.foldStructs",       "title": "Rust: Fold Structs" },
+      { "command": "rustFold.unfoldStructs",     "title": "Rust: Unfold Structs" },
+
+      { "command": "rustFold.toggleEnums",       "title": "Rust: Toggle Fold Enums" },
+      { "command": "rustFold.foldEnums",         "title": "Rust: Fold Enums" },
+      { "command": "rustFold.unfoldEnums",       "title": "Rust: Unfold Enums" },
+
+      { "command": "rustFold.toggleTraits",      "title": "Rust: Toggle Fold Traits" },
+      { "command": "rustFold.foldTraits",        "title": "Rust: Fold Traits" },
+      { "command": "rustFold.unfoldTraits",      "title": "Rust: Unfold Traits" },
+
+      { "command": "rustFold.toggleMods",        "title": "Rust: Toggle Fold Modules" },
+      { "command": "rustFold.foldMods",          "title": "Rust: Fold Modules" },
+      { "command": "rustFold.unfoldMods",        "title": "Rust: Unfold Modules" },
+
+      { "command": "rustFold.toggleMacros",      "title": "Rust: Toggle Fold Macros" },
+      { "command": "rustFold.foldMacros",        "title": "Rust: Fold Macros" },
+      { "command": "rustFold.unfoldMacros",      "title": "Rust: Unfold Macros" },
+
+      { "command": "rustFold.toggleUse",         "title": "Rust: Toggle Fold Use Statements" },
+      { "command": "rustFold.foldUse",           "title": "Rust: Fold Use Statements" },
+      { "command": "rustFold.unfoldUse",         "title": "Rust: Unfold Use Statements" },
+
+      { "command": "rustFold.toggleTests",       "title": "Rust: Toggle Fold Tests" },
+      { "command": "rustFold.foldTests",         "title": "Rust: Fold Tests" },
+      { "command": "rustFold.unfoldTests",       "title": "Rust: Unfold Tests" },
+
+      { "command": "rustFold.toggleAll",         "title": "Rust: Toggle Fold Everything" },
+      { "command": "rustFold.foldAll",           "title": "Rust: Fold Everything" },
+      { "command": "rustFold.unfoldAll",         "title": "Rust: Unfold Everything" },
+
+      { "command": "rustFold.toggleGroup",       "title": "Rust: Toggle Fold Group..." }
+    ],
+    "keybindings": [
+      { "command": "rustFold.toggleComments",    "key": "ctrl+k ctrl+shift+;", "when": "editorLangId == rust && editorTextFocus" },
+      { "command": "rustFold.toggleDocComments", "key": "ctrl+k ctrl+shift+'", "when": "editorLangId == rust && editorTextFocus" },
+      { "command": "rustFold.toggleFunctions",   "key": "ctrl+k ctrl+shift+f", "when": "editorLangId == rust && editorTextFocus" },
+      { "command": "rustFold.toggleImpls",       "key": "ctrl+k ctrl+shift+i", "when": "editorLangId == rust && editorTextFocus" },
+      { "command": "rustFold.toggleStructs",     "key": "ctrl+k ctrl+shift+s", "when": "editorLangId == rust && editorTextFocus" },
+      { "command": "rustFold.toggleEnums",       "key": "ctrl+k ctrl+shift+e", "when": "editorLangId == rust && editorTextFocus" },
+      { "command": "rustFold.toggleTraits",      "key": "ctrl+k ctrl+shift+t", "when": "editorLangId == rust && editorTextFocus" },
+      { "command": "rustFold.toggleMods",        "key": "ctrl+k ctrl+shift+m", "when": "editorLangId == rust && editorTextFocus" },
+      { "command": "rustFold.toggleMacros",      "key": "ctrl+k ctrl+shift+a", "when": "editorLangId == rust && editorTextFocus" },
+      { "command": "rustFold.toggleUse",         "key": "ctrl+k ctrl+shift+u", "when": "editorLangId == rust && editorTextFocus" },
+      { "command": "rustFold.toggleTests",       "key": "ctrl+k ctrl+shift+x", "when": "editorLangId == rust && editorTextFocus" },
+      { "command": "rustFold.toggleAll",         "key": "ctrl+k ctrl+shift+z", "when": "editorLangId == rust && editorTextFocus" },
+      { "command": "rustFold.toggleGroup",       "key": "ctrl+k ctrl+shift+g", "when": "editorLangId == rust && editorTextFocus" }
+    ],
+    "configuration": {
+      "title": "Rust Fold",
+      "properties": {
+        "rustFold.foldBodyOnly": {
+          "type": "boolean",
+          "default": true,
+          "description": "When true, fold only the body braces of an item. When false, the fold starts at the first attribute or doc-comment line above the item."
+        },
+        "rustFold.requireRustAnalyzer": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show a warning notification when rust-analyzer is not detected as active for the current document."
+        },
+        "rustFold.groupPickerRememberSelection": {
+          "type": "boolean",
+          "default": false,
+          "description": "Remember the last group-picker selection per workspace across sessions."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts",
+    "package": "vsce package --allow-missing-repository --skip-license"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.3.0",
+    "@vscode/vsce": "^3.0.0"
+  }
+}
