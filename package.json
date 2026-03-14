@@ -2,7 +2,7 @@
   "name": "code-rust-fold",
   "displayName": "Rust Fold",
   "description": "Enhanced fold/unfold shortcuts for Rust files via rust-analyzer LSP",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "publisher": "code-rust-fold",
   "engines": {
     "vscode": "^1.85.0"
@@ -69,7 +69,9 @@
       { "command": "rustFold.foldAll",           "title": "Rust: Fold Everything" },
       { "command": "rustFold.unfoldAll",         "title": "Rust: Unfold Everything" },
 
-      { "command": "rustFold.toggleGroup",       "title": "Rust: Toggle Fold Group..." }
+      { "command": "rustFold.toggleGroup",       "title": "Rust: Toggle Fold Group..." },
+
+      { "command": "rustFold.diagnose",          "title": "Rust Fold: Diagnose (debug symbols & ranges)" }
     ],
     "keybindings": [
       { "command": "rustFold.toggleComments",    "key": "ctrl+k ctrl+shift+;", "when": "editorLangId == rust && editorTextFocus" },

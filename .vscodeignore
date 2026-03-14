@@ -1,5 +1,6 @@
 .vscode/**
 src/**
+test-fixtures/**
 node_modules/**
 .gitignore
 tsconfig.json

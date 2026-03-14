@@ -3,6 +3,7 @@ import { FoldTargetKind, FoldDirection, GroupPickerItem } from './types';
 import { SymbolProvider } from './symbolProvider';
 import { CommentScanner } from './commentScanner';
 import { FoldExecutor } from './foldExecutor';
+import { SyntaxScanner, SyntaxKind } from './syntaxScanner';
 import { FoldRange } from './types';
 
 const GROUP_PICKER_STATE_KEY = 'rustFold.groupPickerLastSelection';
@@ -27,6 +28,7 @@ const ALL_KINDS: FoldTargetKind[] = [
 export class FoldController {
     private readonly symbolProvider = new SymbolProvider();
     private readonly commentScanner = new CommentScanner();
+    private readonly syntaxScanner = new SyntaxScanner();
     private readonly executor = new FoldExecutor();
 
     constructor(private readonly context: vscode.ExtensionContext) {}
@@ -205,17 +207,28 @@ export class FoldController {
                 return this.commentScanner.scanUseStatements(doc);
             default: {
                 const symbolSet = await this.symbolProvider.getSymbolRanges(doc);
-                if (!symbolSet) { return []; }
+                if (symbolSet) {
+                    switch (kind) {
+                        case 'functions': return symbolSet.functions;
+                        case 'impls':     return symbolSet.impls;
+                        case 'structs':   return symbolSet.structs;
+                        case 'enums':     return symbolSet.enums;
+                        case 'traits':    return symbolSet.traits;
+                        case 'mods':      return symbolSet.mods;
+                        case 'macros':    return symbolSet.macros;
+                        case 'tests':     return symbolSet.tests;
+                        default:          return [];
+                    }
+                }
+                // rust-analyzer not available — fall back to text-based scanning
                 switch (kind) {
-                    case 'functions': return symbolSet.functions;
-                    case 'impls':     return symbolSet.impls;
-                    case 'structs':   return symbolSet.structs;
-                    case 'enums':     return symbolSet.enums;
-                    case 'traits':    return symbolSet.traits;
-                    case 'mods':      return symbolSet.mods;
-                    case 'macros':    return symbolSet.macros;
-                    case 'tests':     return symbolSet.tests;
-                    default:          return [];
+                    case 'impls':     return this.syntaxScanner.scan(doc, 'impls');
+                    case 'functions': return this.syntaxScanner.scan(doc, 'functions');
+                    case 'structs':   return this.syntaxScanner.scan(doc, 'structs');
+                    case 'enums':     return this.syntaxScanner.scan(doc, 'enums');
+                    case 'traits':    return this.syntaxScanner.scan(doc, 'traits');
+                    case 'mods':      return this.syntaxScanner.scan(doc, 'mods');
+                    default:          return []; // macros, tests need RA
                 }
             }
         }
@@ -240,6 +253,139 @@ export class FoldController {
                 );
             }
         });
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Diagnostic
+    // ──────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Dumps a full symbol + resolved-range report to the "Rust Fold: Diagnostics"
+     * output channel.  Run via "Rust Fold: Diagnose" in the command palette.
+     */
+    async diagnose(): Promise<void> {
+        const channel = vscode.window.createOutputChannel('Rust Fold: Diagnostics');
+        channel.clear();
+        channel.show(true);
+
+        const activeEditor = vscode.window.activeTextEditor;
+        if (!activeEditor) {
+            channel.appendLine('[ERROR] No active editor.');
+            return;
+        }
+        if (activeEditor.document.languageId !== 'rust') {
+            channel.appendLine(
+                `[ERROR] Active file is not Rust (languageId=${activeEditor.document.languageId}).`
+            );
+            return;
+        }
+
+        const uri = activeEditor.document.uri;
+        channel.appendLine(`File  : ${uri.fsPath}`);
+        channel.appendLine(`Lines : ${activeEditor.document.lineCount}`);
+        channel.appendLine('');
+
+        // --- Raw symbols from the document symbol provider ---
+        let rawSymbols: vscode.DocumentSymbol[] | undefined;
+        try {
+            rawSymbols = await vscode.commands.executeCommand<vscode.DocumentSymbol[]>(
+                'vscode.executeDocumentSymbolProvider',
+                uri
+            );
+        } catch (e) {
+            channel.appendLine(`[ERROR] executeDocumentSymbolProvider threw: ${e}`);
+        }
+
+        if (!rawSymbols || rawSymbols.length === 0) {
+            channel.appendLine('[WARNING] No symbols returned by the document symbol provider.');
+            channel.appendLine('  rust-analyzer may not be running or has not indexed the file yet.');
+            channel.appendLine('  The extension will use the text-based SyntaxScanner as a fallback.');
+            channel.appendLine('');
+
+            channel.appendLine('=== Text-based fallback ranges (SyntaxScanner) ===');
+            const fallbackKinds: Array<[string, SyntaxKind]> = [
+                ['impls',     'impls'],
+                ['functions', 'functions'],
+                ['structs',   'structs'],
+                ['enums',     'enums'],
+                ['traits',    'traits'],
+                ['mods',      'mods'],
+            ];
+            for (const [label, k] of fallbackKinds) {
+                const ranges = this.syntaxScanner.scan(activeEditor.document, k);
+                channel.appendLine(`  ${label.padEnd(10)}: ${ranges.length} range(s)`);
+                for (const r of ranges) {
+                    channel.appendLine(
+                        `    → startLine=${r.startLine + 1}, endLine=${r.endLine + 1}`
+                    );
+                }
+            }
+            return;
+        }
+
+        channel.appendLine(`=== Raw document symbols (${rawSymbols.length} top-level) ===`);
+        channel.appendLine('  (kind numbers: File=0 Module=1 Namespace=2 Package=3 Class=4 Method=5');
+        channel.appendLine('   Property=6 Field=7 Constructor=8 Enum=9 Interface=10 Function=11');
+        channel.appendLine('   Variable=12 Constant=13 String=14 Struct=22 Object=18 TypeParameter=25)');
+        channel.appendLine('');
+        this.logSymbolTree(rawSymbols, channel, 0);
+
+        // --- Resolved ranges via SymbolProvider ---
+        channel.appendLine('');
+        channel.appendLine('=== Resolved ranges per category ===');
+        const symbolSet = await this.symbolProvider.getSymbolRanges(activeEditor.document);
+        if (!symbolSet) {
+            channel.appendLine('[WARNING] SymbolProvider.getSymbolRanges() returned null (RA not available).');
+            channel.appendLine('  Falling back to text-based SyntaxScanner for structural kinds.');
+            channel.appendLine('');
+        } else {
+            const entries: Array<[string, FoldRange[]]> = [
+                ['impls',     symbolSet.impls],
+                ['functions', symbolSet.functions],
+                ['structs',   symbolSet.structs],
+                ['enums',     symbolSet.enums],
+                ['traits',    symbolSet.traits],
+                ['mods',      symbolSet.mods],
+                ['macros',    symbolSet.macros],
+                ['tests',     symbolSet.tests],
+            ];
+            for (const [name, ranges] of entries) {
+                channel.appendLine(`  ${name.padEnd(10)}: ${ranges.length} range(s)`);
+                for (const r of ranges) {
+                    channel.appendLine(
+                        `    → startLine=${r.startLine + 1} (0-indexed: ${r.startLine}),` +
+                        ` endLine=${r.endLine + 1} (0-indexed: ${r.endLine})`
+                    );
+                }
+            }
+        }
+
+        channel.appendLine('');
+        channel.appendLine('=== editor.fold selectionLines that would be sent ===');
+        channel.appendLine('  (These 0-indexed line numbers are passed to the editor.fold command)');
+        if (symbolSet && symbolSet.impls.length > 0) {
+            channel.appendLine(`  impls: [${symbolSet.impls.map(r => r.startLine).join(', ')}]`);
+        } else {
+            channel.appendLine('  impls: [] (empty — this is why fold impl does nothing!)');
+        }
+    }
+
+    private logSymbolTree(
+        symbols: vscode.DocumentSymbol[],
+        channel: vscode.OutputChannel,
+        depth: number
+    ): void {
+        const indent = '  '.repeat(depth);
+        for (const sym of symbols) {
+            channel.appendLine(
+                `${indent}kind=${sym.kind} name="${sym.name}" detail="${sym.detail ?? ''}"` +
+                ` range=${sym.range.start.line + 1}-${sym.range.end.line + 1}` +
+                ` selRange=${sym.selectionRange.start.line + 1}-${sym.selectionRange.end.line + 1}`
+            );
+            if (sym.children?.length) {
+                this.logSymbolTree(sym.children, channel, depth + 1);
+            }
+        }
     }
 }
 

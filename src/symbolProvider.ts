@@ -71,8 +71,9 @@ export class SymbolProvider {
                     break;
                 }
 
-                case vscode.SymbolKind.Class: {
-                    // RA maps `impl` blocks to SymbolKind.Class
+                case vscode.SymbolKind.Class:
+                case vscode.SymbolKind.Object: {
+                    // RA maps `impl` blocks to SymbolKind.Object (current) or SymbolKind.Class (older)
                     if (range) { set.impls.push(range); }
                     // recurse into impl to find methods
                     if (sym.children?.length) {

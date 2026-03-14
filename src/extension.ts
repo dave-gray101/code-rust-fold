@@ -42,6 +42,13 @@ export function activate(context: vscode.ExtensionContext): void {
         )
     );
 
+    // Diagnostic command
+    context.subscriptions.push(
+        vscode.commands.registerCommand('rustFold.diagnose', () =>
+            controller.diagnose()
+        )
+    );
+
     // ── Explicit fold/unfold commands (palette-only, no keybindings) ──────────
 
     const explicitBindings: Array<[string, FoldTargetKind, FoldDirection]> = [
